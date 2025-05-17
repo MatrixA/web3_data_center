@@ -5,10 +5,15 @@ from urllib.parse import urlparse
 import traceback
 import time
 
-from opensearchpy import AsyncOpenSearch, OpenSearch,ConnectionTimeout, OpenSearchException, NotFoundError
+from opensearchpy import (
+    AsyncOpenSearch,
+    ConnectionTimeout,
+    OpenSearchException,
+    NotFoundError,
+    RequestError,
+    TransportError,
+)
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-
-from opensearchpy import OpenSearch, RequestError, TransportError
 
 from .base_client import BaseClient
 
@@ -488,13 +493,14 @@ class OpenSearchClient(BaseClient):
             response = await self.client.get(index="eth_block", id=tx_hash)
             return response['_source']['EthChangeIn']
         except RequestError as e:
-            logger.error(f"OpenSearch request error: {e}")
-            logger.error(f"Query: {query}")
-            logger.error(f"Error details: {e.info}")
+            logger.error(
+                f"OpenSearch request error while fetching EthChangeIn for {tx_hash}: {e}"
+            )
             raise
         except TransportError as e:
-            logger.error(f"OpenSearch transport error: {e}")
-            logger.error(f"Query: {query}")
+            logger.error(
+                f"OpenSearch transport error while fetching EthChangeIn for {tx_hash}: {e}"
+            )
             raise
 
     @staticmethod
